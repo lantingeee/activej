@@ -22,7 +22,6 @@ import io.activej.common.Checks;
 import io.activej.common.CollectorsEx;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.ref.RefInt;
 import io.activej.csp.ChannelConsumer;
@@ -32,6 +31,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.exception.FsException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
@@ -318,7 +318,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 								// upload file to this partition
 								ActiveFs fs = partitions.get(partitionId);
 								if (fs == null) {
-									return Promise.ofException(new StacklessException(ClusterRepartitionController.class, "File system '" + partitionId + "' is not alive"));
+									return Promise.ofException(new FsException(ClusterRepartitionController.class, "File system '" + partitionId + "' is not alive"));
 								}
 								return getAcknowledgement(fn ->
 										splitter.addOutput()
@@ -398,7 +398,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 
 	private void checkEnoughAlivePartitions() {
 		if (partitions.getAlivePartitions().size() < replicationCount) {
-			throw new UncheckedException(new StacklessException(ClusterRepartitionController.class, "Not enough alive partitions"));
+			throw new UncheckedException(new FsException(ClusterRepartitionController.class, "Not enough alive partitions"));
 		}
 	}
 

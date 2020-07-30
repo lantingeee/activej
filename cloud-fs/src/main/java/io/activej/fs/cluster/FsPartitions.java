@@ -20,9 +20,9 @@ import io.activej.async.function.AsyncSupplier;
 import io.activej.async.function.AsyncSuppliers;
 import io.activej.async.service.EventloopService;
 import io.activej.common.api.WithInitializer;
-import io.activej.common.exception.StacklessException;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
+import io.activej.fs.exception.FsException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -168,10 +168,12 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 		}
 	}
 
+	/**
+	 * If partition has returned exception other than {@link FsException} that indicates that there were connection problems
+	 * or that there were no response at all
+	 */
 	public void markIfDead(Object partitionId, Throwable e) {
-		// marking as dead only on lower level connection and other I/O exceptions,
-		// stackless exceptions are the ones actually received with an ServerError response (so the node is obviously not dead)
-		if (e.getClass() != StacklessException.class) {
+		if (e.getClass() != FsException.class) {
 			markDead(partitionId, e);
 		}
 	}
@@ -182,7 +184,7 @@ public final class FsPartitions implements EventloopService, WithInitializer<FsP
 				return Promise.of(res);
 			}
 			markIfDead(partitionId, e);
-			return Promise.ofException(new StacklessException(ClusterActiveFs.class, "Node failed with exception", e));
+			return Promise.ofException(new FsException(FsPartitions.class, "Node failed with exception", e));
 		};
 	}
 

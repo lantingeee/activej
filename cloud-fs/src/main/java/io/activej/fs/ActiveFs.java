@@ -17,9 +17,9 @@
 package io.activej.fs;
 
 import io.activej.bytebuf.ByteBuf;
-import io.activej.common.exception.StacklessException;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
+import io.activej.fs.exception.FsException;
 import io.activej.promise.Promise;
 import io.activej.promise.Promises;
 import org.jetbrains.annotations.NotNull;
@@ -39,13 +39,15 @@ import static java.util.stream.Collectors.toSet;
 public interface ActiveFs {
 	String SEPARATOR = "/";
 
-	StacklessException FILE_NOT_FOUND = new StacklessException(ActiveFs.class, "File not found");
-	StacklessException FILE_EXISTS = new StacklessException(ActiveFs.class, "File already exists");
-	StacklessException BAD_PATH = new StacklessException(ActiveFs.class, "Given file name points to file outside root");
-	StacklessException BAD_RANGE = new StacklessException(ActiveFs.class, "Given offset or limit doesn't make sense");
-	StacklessException IS_DIRECTORY = new StacklessException(ActiveFs.class, "Operated file is a directory");
-	StacklessException MALFORMED_GLOB = new StacklessException(ActiveFs.class, "Malformed glob pattern");
-	StacklessException ILLEGAL_OFFSET = new StacklessException(ActiveFs.class, "Offset exceeds file size");
+	FsException FILE_NOT_FOUND = new FsException(ActiveFs.class, "File not found");
+	FsException FILE_EXISTS = new FsException(ActiveFs.class, "File already exists");
+	FsException BAD_PATH = new FsException(ActiveFs.class, "Given file name points to file outside root");
+	FsException BAD_RANGE = new FsException(ActiveFs.class, "Given offset or limit doesn't make sense");
+	FsException IS_DIRECTORY = new FsException(ActiveFs.class, "Operated file is a directory");
+	FsException MALFORMED_GLOB = new FsException(ActiveFs.class, "Malformed glob pattern");
+	FsException ILLEGAL_OFFSET = new FsException(ActiveFs.class, "Offset exceeds file size");
+	FsException UNEXPECTED_DATA = new FsException(ActiveFs.class, "Received more data than expected");
+	FsException UNEXPECTED_END_OF_STREAM = new FsException(ActiveFs.class, "Received less data than expected");
 
 	/**
 	 * Returns a consumer of bytebufs which are written (or sent) to the file.

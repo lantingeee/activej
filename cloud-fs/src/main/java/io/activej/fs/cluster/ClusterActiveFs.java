@@ -21,7 +21,6 @@ import io.activej.async.service.EventloopService;
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.api.WithInitializer;
 import io.activej.common.collection.Try;
-import io.activej.common.exception.StacklessException;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
@@ -30,6 +29,7 @@ import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
 import io.activej.fs.FileMetadata;
+import io.activej.fs.exception.FsException;
 import io.activej.jmx.api.attribute.JmxAttribute;
 import io.activej.jmx.api.attribute.JmxOperation;
 import io.activej.promise.Promise;
@@ -128,7 +128,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 		checkArgument(0 <= uploadTargetsMin,
 				"Minimum number of upload targets should not be less than zero");
 		checkArgument(0 < uploadTargetsMax && uploadTargetsMin <= uploadTargetsMax && uploadTargetsMax <= partitions.getPartitions().size(),
-				"Maximum number of upload targets should be greatert than zero, " +
+				"Maximum number of upload targets should be greater than zero, " +
 						"should not be less than minimum number of upload targets and" +
 						"should not exceed total number of partitions");
 		this.deadPartitionsThreshold = deadPartitionsThreshold;
@@ -249,7 +249,8 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 
 	@Override
 	public Promise<Void> ping() {
-		return checkNotDead();
+		return partitions.checkAllPartitions()
+				.then(this::checkNotDead);
 	}
 
 	@NotNull
@@ -270,7 +271,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	}
 
 	private static <T> Promise<T> ofFailure(String message) {
-		return Promise.ofException(new StacklessException(ClusterActiveFs.class, message));
+		return Promise.ofException(new FsException(ClusterActiveFs.class, message));
 	}
 
 	private <T> Promise<T> checkStillNotDead(T value) {
@@ -352,7 +353,7 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	private <T> Promise<T> call(Object id, BiFunction<Object, ActiveFs, Promise<T>> action) {
 		ActiveFs fs = partitions.get(id);
 		if (fs == null) {  // marked as dead already by somebody
-			return Promise.ofException(new StacklessException(ClusterActiveFs.class, "Partition '" + id + "' is not alive"));
+			return Promise.ofException(new FsException(ClusterActiveFs.class, "Partition '" + id + "' is not alive"));
 		}
 		return action.apply(id, fs)
 				.thenEx(partitions.wrapDeath(id));
