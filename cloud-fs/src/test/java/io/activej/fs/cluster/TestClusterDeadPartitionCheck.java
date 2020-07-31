@@ -92,7 +92,7 @@ public final class TestClusterDeadPartitionCheck {
 
 							@Override
 							public AbstractServer<?> createServer(LocalActiveFs localFs, InetSocketAddress address) {
-								return ActiveFsServer.create(localFs.getEventloop(), localFs, newSingleThreadExecutor())
+								return ActiveFsServer.create(localFs.getEventloop(), localFs)
 										.withListenAddress(address);
 							}
 

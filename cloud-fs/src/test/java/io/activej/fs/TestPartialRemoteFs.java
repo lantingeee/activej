@@ -64,7 +64,7 @@ public final class TestPartialRemoteFs {
 		clientStorage = tempFolder.newFolder().toPath();
 		LocalActiveFs localFs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, serverStorage);
 		initTempDir(serverStorage);
-		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs, executor).withListenAddress(ADDRESS);
+		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs).withListenAddress(ADDRESS);
 		server.listen();
 		client = RemoteActiveFs.create(Eventloop.getCurrentEventloop(), ADDRESS);
 

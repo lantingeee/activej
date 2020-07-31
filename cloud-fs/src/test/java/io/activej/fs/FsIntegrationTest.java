@@ -71,7 +71,7 @@ public final class FsIntegrationTest {
 		storage = temporaryFolder.newFolder("server_storage").toPath();
 		initTempDir(storage);
 		LocalActiveFs localFs = LocalActiveFs.create(Eventloop.getCurrentEventloop(), executor, storage);
-		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs, executor).withListenAddress(address);
+		server = ActiveFsServer.create(Eventloop.getCurrentEventloop(), localFs).withListenAddress(address);
 		server.listen();
 		fs = RemoteActiveFs.create(Eventloop.getCurrentEventloop(), address);
 	}
