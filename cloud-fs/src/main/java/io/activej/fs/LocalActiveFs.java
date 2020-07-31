@@ -64,7 +64,6 @@ import static io.activej.common.collection.CollectionUtils.map;
 import static io.activej.common.collection.CollectionUtils.toLimitedString;
 import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
 import static io.activej.fs.util.RemoteFsUtils.isWildcard;
-import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
@@ -160,12 +159,6 @@ public final class LocalActiveFs implements ActiveFs, EventloopService, Eventloo
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 		return doUpload(name, identity())
 				.whenComplete(toLogger(logger, TRACE, "upload", name, this));
-	}
-
-	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-		return doUpload(name, ofFixedSize(size))
-				.whenComplete(toLogger(logger, TRACE, "upload", name, size, this));
 	}
 
 	@Override

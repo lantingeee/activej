@@ -61,11 +61,6 @@ final class MountingActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-		return findMount(name).upload(name, size);
-	}
-
-	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
 		return findMount(name).append(name, offset);
 	}

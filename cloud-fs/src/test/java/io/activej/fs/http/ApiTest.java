@@ -127,14 +127,6 @@ public final class ApiTest {
 	}
 
 	@Test
-	public void uploadWithSize() {
-		Promise<Void> uploadPromise = ChannelSupplier.ofIterable(data)
-				.map(ByteBufStrings::wrapUtf8)
-				.streamTo(client.upload("test", dataSize));
-		doTest(uploadPromise, "test", dataSize, data);
-	}
-
-	@Test
 	public void append() {
 		Promise<Void> appendPromise = ChannelSupplier.ofIterable(data)
 				.map(ByteBufStrings::wrapUtf8)
@@ -204,15 +196,6 @@ public final class ApiTest {
 						.<ByteBuf>map(byteBuf -> byteBuf.asString(UTF_8))
 						.withAcknowledgement(ack -> ack
 								.then(result -> resultOf(result, name, received))));
-			}
-
-			@Override
-			public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-				List<String> received = new ArrayList<>();
-				return Promise.of(ChannelConsumer.<String>ofConsumer(received::add)
-						.<ByteBuf>map(byteBuf -> byteBuf.asString(UTF_8))
-						.withAcknowledgement(ack -> ack
-								.then(result -> resultOf(result, name, size, received))));
 			}
 
 			@Override

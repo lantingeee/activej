@@ -32,7 +32,7 @@ import java.util.stream.IntStream;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
-import static io.activej.fs.ActiveFs.*;
+import static io.activej.fs.ActiveFs.BAD_PATH;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
 import static io.activej.promise.TestUtils.awaitException;
@@ -87,42 +87,12 @@ public final class FsIntegrationTest {
 	}
 
 	@Test
-	public void uploadLessThanSpecified() {
-		String filename = "incomplete.txt";
-		Path path = storage.resolve(filename);
-		assertFalse(Files.exists(path));
-
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data"))
-				.streamTo(fs.upload(filename, 10))
-				.whenComplete(server::close));
-
-		assertSame(UNEXPECTED_END_OF_STREAM, exception);
-
-		assertFalse(Files.exists(path));
-	}
-
-	@Test
-	public void uploadMoreThanSpecified() {
-		String filename = "incomplete.txt";
-		Path path = storage.resolve(filename);
-		assertFalse(Files.exists(path));
-
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data"))
-				.streamTo(fs.upload(filename, 10))
-				.whenComplete(server::close));
-
-		assertSame(UNEXPECTED_DATA, exception);
-
-		assertFalse(Files.exists(path));
-	}
-
-	@Test
 	public void testUploadMultiple() throws IOException {
 		int files = 10;
 
 		await(Promises.all(IntStream.range(0, 10)
 				.mapToObj(i -> ChannelSupplier.of(ByteBuf.wrapForReading(CONTENT))
-						.streamTo(ChannelConsumer.ofPromise(fs.upload("file" + i, CONTENT.length)))))
+						.streamTo(ChannelConsumer.ofPromise(fs.upload("file" + i)))))
 				.whenComplete(server::close));
 
 		for (int i = 0; i < files; i++) {
@@ -168,7 +138,7 @@ public final class FsIntegrationTest {
 				ChannelSupplier.ofException(new FsException(FsIntegrationTest.class, "Test exception")),
 				ChannelSupplier.of(wrapUtf8("Test4")));
 
-		Throwable exception = awaitException(supplier.streamTo(ChannelConsumer.ofPromise(fs.upload(resultFile, Long.MAX_VALUE)))
+		Throwable exception = awaitException(supplier.streamTo(ChannelConsumer.ofPromise(fs.upload(resultFile)))
 				.whenComplete(server::close));
 
 		assertThat(exception, instanceOf(FsException.class));
@@ -329,7 +299,7 @@ public final class FsIntegrationTest {
 	}
 
 	private Promise<Void> upload(String resultFile, byte[] bytes) {
-		return fs.upload(resultFile, bytes.length)
+		return fs.upload(resultFile)
 				.then(ChannelSupplier.of(ByteBuf.wrapForReading(bytes))::streamTo);
 	}
 }

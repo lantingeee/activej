@@ -62,7 +62,7 @@ public final class FileUploadExample extends Launcher {
 		CompletableFuture<Void> future = eventloop.submit(() ->
 				// consumer result here is a marker of it being successfully uploaded
 				ChannelFileReader.open(executor, clientFile)
-						.then(cfr -> cfr.streamTo(client.upload(FILE_NAME, EXAMPLE_TEXT.length())))
+						.then(cfr -> cfr.streamTo(client.upload(FILE_NAME)))
 						.whenResult(() -> System.out.printf("%nFile '%s' successfully uploaded%n%n", FILE_NAME))
 		);
 		future.get();

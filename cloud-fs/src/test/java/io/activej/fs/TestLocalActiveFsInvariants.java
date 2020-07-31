@@ -923,11 +923,6 @@ public final class TestLocalActiveFsInvariants {
 		}
 
 		@Override
-		public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-			return peer.upload(name, size);
-		}
-
-		@Override
 		public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
 			return peer.append(name, offset);
 		}

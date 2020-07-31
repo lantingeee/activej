@@ -26,7 +26,8 @@ import java.util.Set;
 
 import static io.activej.bytebuf.ByteBufStrings.wrapUtf8;
 import static io.activej.common.collection.CollectionUtils.set;
-import static io.activej.fs.ActiveFs.*;
+import static io.activej.fs.ActiveFs.FILE_NOT_FOUND;
+import static io.activej.fs.ActiveFs.MALFORMED_GLOB;
 import static io.activej.fs.LocalActiveFs.DEFAULT_TEMP_DIR;
 import static io.activej.fs.util.Utils.initTempDir;
 import static io.activej.promise.TestUtils.await;
@@ -125,36 +126,6 @@ public final class TestLocalActiveFs {
 				.streamTo(consumer));
 
 		assertSame(expectedException, exception);
-
-		assertFalse(Files.exists(path));
-	}
-
-	@Test
-	public void uploadLessThanSpecified() {
-		String filename = "incomplete.txt";
-		Path path = storagePath.resolve(filename);
-		assertFalse(Files.exists(path));
-
-		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename, 10));
-
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data")).streamTo(consumer));
-
-		assertSame(UNEXPECTED_END_OF_STREAM, exception);
-
-		assertFalse(Files.exists(path));
-	}
-
-	@Test
-	public void uploadMoreThanSpecified() {
-		String filename = "incomplete.txt";
-		Path path = storagePath.resolve(filename);
-		assertFalse(Files.exists(path));
-
-		ChannelConsumer<ByteBuf> consumer = await(client.upload(filename, 10));
-
-		Throwable exception = awaitException(ChannelSupplier.of(wrapUtf8("data data data data")).streamTo(consumer));
-
-		assertSame(UNEXPECTED_DATA, exception);
 
 		assertFalse(Files.exists(path));
 	}

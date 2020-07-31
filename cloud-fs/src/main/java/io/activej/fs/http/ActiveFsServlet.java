@@ -16,7 +16,6 @@
 
 package io.activej.fs.http;
 
-
 import io.activej.bytebuf.ByteBuf;
 import io.activej.common.exception.UncheckedException;
 import io.activej.common.tuple.Tuple1;
@@ -41,7 +40,8 @@ import static io.activej.fs.util.RemoteFsUtils.parseBody;
 import static io.activej.http.ContentTypes.JSON_UTF_8;
 import static io.activej.http.ContentTypes.PLAIN_TEXT_UTF_8;
 import static io.activej.http.HttpHeaderValue.ofContentType;
-import static io.activej.http.HttpHeaders.*;
+import static io.activej.http.HttpHeaders.ACCEPT_RANGES;
+import static io.activej.http.HttpHeaders.CONTENT_TYPE;
 import static io.activej.http.HttpMethod.GET;
 import static io.activej.http.HttpMethod.POST;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -56,14 +56,9 @@ public final class ActiveFsServlet {
 
 	public static RoutingServlet create(ActiveFs fs, boolean inline) {
 		return RoutingServlet.create()
-				.map(POST, "/" + UPLOAD + "/*", request -> {
-					String contentLength = request.getHeader(CONTENT_LENGTH);
-					Long size = contentLength == null ? null : Long.valueOf(contentLength);
-					return (size == null ?
-							fs.upload(decodePath(request)) :
-							fs.upload(decodePath(request), size))
-							.mapEx(acknowledgeUpload(request));
-				})
+				.map(POST, "/" + UPLOAD + "/*", request ->
+						fs.upload(decodePath(request))
+								.mapEx(acknowledgeUpload(request)))
 				.map(POST, "/" + UPLOAD, request -> request.handleMultipart(MultipartDataHandler.file(fs::upload))
 						.mapEx(errorHandler()))
 				.map(POST, "/" + APPEND + "/*", request -> {

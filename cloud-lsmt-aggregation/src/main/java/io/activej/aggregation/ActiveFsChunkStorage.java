@@ -211,7 +211,7 @@ public final class ActiveFsChunkStorage<C> implements AggregationChunkStorage<C>
 	public Promise<Void> backup(String backupId, Set<C> chunkIds) {
 		return fs.copyAll(chunkIds.stream().collect(toMap(this::toPath, c -> toBackupPath(backupId, c))))
 				.then(() -> ChannelSupplier.<ByteBuf>of().streamTo(
-						fs.upload(toBackupPath(backupId, null), 0)))
+						fs.upload(toBackupPath(backupId, null))))
 				.whenComplete(promiseBackup.recordStats())
 				.toVoid();
 	}

@@ -18,7 +18,6 @@ package io.activej.fs.tcp;
 
 import io.activej.codec.CodecSubtype;
 import io.activej.codec.StructuredCodec;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Set;
@@ -33,8 +32,7 @@ public final class RemoteFsCommands {
 
 	static final StructuredCodec<FsCommand> CODEC = CodecSubtype.<FsCommand>create()
 			.with(Upload.class, object(Upload::new,
-					"name", Upload::getName, STRING_CODEC,
-					"size", Upload::getSize, ofNullable(LONG_CODEC)))
+					"name", Upload::getName, STRING_CODEC))
 			.with(Append.class, object(Append::new,
 					"name", Append::getName, STRING_CODEC,
 					"offset", Append::getOffset, LONG_CODEC))
@@ -69,25 +67,18 @@ public final class RemoteFsCommands {
 
 	public static final class Upload extends FsCommand {
 		private final String name;
-		@Nullable
-		private final Long size;
 
-		public Upload(String name, @Nullable Long size) {
+		public Upload(String name) {
 			this.name = name;
-			this.size = size;
 		}
 
 		public String getName() {
 			return name;
 		}
 
-		public @Nullable Long getSize() {
-			return size;
-		}
-
 		@Override
 		public String toString() {
-			return "Upload{name='" + name + "', size=" + size + '}';
+			return "Upload{name='" + name + '}';
 		}
 	}
 

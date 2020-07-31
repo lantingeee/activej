@@ -118,17 +118,9 @@ public final class RemoteActiveFs implements ActiveFs, EventloopService, Eventlo
 				.whenComplete(toLogger(logger, "upload", name, this));
 	}
 
-	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-		return connect(address)
-				.then(messaging -> doUpload(messaging, name, size))
-				.whenComplete(uploadStartPromise.recordStats())
-				.whenComplete(toLogger(logger, "upload", name, size, this));
-	}
-
 	@NotNull
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(MessagingWithBinaryStreaming<FsResponse, FsCommand> messaging, @NotNull String name, @Nullable Long size) {
-		return messaging.send(new Upload(name, size))
+		return messaging.send(new Upload(name))
 				.then(messaging::receive)
 				.then(msg -> cast(msg, UploadAck.class))
 				.then(() -> Promise.of(messaging.sendBinaryStream()

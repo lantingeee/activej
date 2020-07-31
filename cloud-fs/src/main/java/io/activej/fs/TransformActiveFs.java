@@ -56,15 +56,6 @@ final class TransformActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-		Optional<String> transformed = into.apply(name);
-		if (!transformed.isPresent()) {
-			return Promise.ofException(BAD_PATH);
-		}
-		return parent.upload(transformed.get(), size);
-	}
-
-	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
 		Optional<String> transformed = into.apply(name);
 		if (!transformed.isPresent()) {

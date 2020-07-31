@@ -39,7 +39,8 @@ import static io.activej.async.util.LogUtils.Level.TRACE;
 import static io.activej.async.util.LogUtils.toLogger;
 import static io.activej.fs.ActiveFs.BAD_RANGE;
 import static io.activej.fs.ActiveFs.FILE_NOT_FOUND;
-import static io.activej.fs.util.RemoteFsUtils.*;
+import static io.activej.fs.util.RemoteFsUtils.ERROR_TO_ID;
+import static io.activej.fs.util.RemoteFsUtils.nullTerminatedJson;
 
 /**
  * An implementation of {@link AbstractServer} for RemoteFs.
@@ -109,9 +110,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	private void addHandlers() {
 		onMessage(Upload.class, (messaging, msg) -> {
 			String name = msg.getName();
-			Long size = msg.getSize();
-			return (size == null ? fs.upload(name) : fs.upload(name, size))
-					.map(uploader -> size == null ? uploader : uploader.transformWith(ofFixedSize(size)))
+			return fs.upload(name)
 					.then(uploader -> messaging.send(new UploadAck())
 							.then(() -> messaging.receiveBinaryStream()
 									.withEndOfStream(eos -> eos

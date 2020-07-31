@@ -323,7 +323,7 @@ public final class ClusterRepartitionController implements WithInitializer<Clust
 								return getAcknowledgement(fn ->
 										splitter.addOutput()
 												.set(ChannelConsumer.ofPromise(remoteMeta == null ?
-														fs.upload(name, meta.getSize()) :
+														fs.upload(name) :
 														fs.append(name, remoteMeta.getSize())
 																.map(consumer -> consumer.transformWith(ChannelByteRanger.drop(remoteMeta.getSize() - offset))))
 														.withAcknowledgement(ack -> ack

@@ -62,8 +62,6 @@ public interface ActiveFs {
 	 */
 	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name);
 
-	Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size);
-
 	Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset);
 
 	/**

@@ -54,14 +54,6 @@ final class FilterActiveFs implements ActiveFs {
 	}
 
 	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-		if (!predicate.test(name)) {
-			return Promise.ofException(BAD_PATH);
-		}
-		return parent.upload(name);
-	}
-
-	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
 		if (!predicate.test(name)) {
 			return Promise.ofException(BAD_PATH);

@@ -24,7 +24,6 @@ import io.activej.common.collection.Try;
 import io.activej.common.ref.RefBoolean;
 import io.activej.csp.ChannelConsumer;
 import io.activej.csp.ChannelSupplier;
-import io.activej.csp.dsl.ChannelConsumerTransformer;
 import io.activej.eventloop.Eventloop;
 import io.activej.eventloop.jmx.EventloopJmxBeanEx;
 import io.activej.fs.ActiveFs;
@@ -49,8 +48,6 @@ import java.util.stream.Stream;
 
 import static io.activej.common.Checks.checkArgument;
 import static io.activej.common.collection.CollectionUtils.transformIterator;
-import static io.activej.csp.dsl.ChannelConsumerTransformer.identity;
-import static io.activej.fs.util.RemoteFsUtils.ofFixedSize;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -148,17 +145,12 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
-		return doUpload(name, fs -> fs.upload(name), identity(), uploadStartPromise, uploadFinishPromise);
-	}
-
-	@Override
-	public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
-		return doUpload(name, fs -> fs.upload(name, size), ofFixedSize(size), uploadStartPromise, uploadFinishPromise);
+		return doUpload(name, fs -> fs.upload(name), uploadStartPromise, uploadFinishPromise);
 	}
 
 	@Override
 	public Promise<ChannelConsumer<ByteBuf>> append(@NotNull String name, long offset) {
-		return doUpload(name, fs -> fs.append(name, offset), identity(), appendStartPromise, appendFinishPromise);
+		return doUpload(name, fs -> fs.append(name, offset), appendStartPromise, appendFinishPromise);
 	}
 
 	@Override
@@ -290,12 +282,11 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 	private Promise<ChannelConsumer<ByteBuf>> doUpload(
 			String name,
 			Function<ActiveFs, Promise<ChannelConsumer<ByteBuf>>> action,
-			ChannelConsumerTransformer<ByteBuf, ChannelConsumer<ByteBuf>> transformer,
 			PromiseStats startStats,
 			PromiseStats finishStats) {
 		return checkNotDead()
 				.then(() -> collect(name, action))
-				.then(containers -> {
+				.map(containers -> {
 					ChannelByteSplitter splitter = ChannelByteSplitter.create(uploadTargetsMin);
 					for (Container<ChannelConsumer<ByteBuf>> container : containers) {
 						splitter.addOutput().set(container.value);
@@ -307,9 +298,8 @@ public final class ClusterActiveFs implements ActiveFs, WithInitializer<ClusterA
 								.collect(joining(", ", "[", "]")), this);
 					}
 
-					return Promise.of(splitter.getInput().getConsumer()
-							.transformWith(transformer))
-							.whenComplete(finishStats.recordStats());
+					finishStats.recordStats();
+					return splitter.getInput().getConsumer();
 				})
 				.whenComplete(startStats.recordStats());
 	}

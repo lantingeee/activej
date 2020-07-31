@@ -97,7 +97,7 @@ public final class ClusterRepartitionControllerTest {
 		ActiveFsServer failingServer = ActiveFsServer.create(eventloop,
 				new ForwardingActiveFs(peer) {
 					@Override
-					public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name, long size) {
+					public Promise<ChannelConsumer<ByteBuf>> upload(@NotNull String name) {
 						return super.upload(name)
 								.map(consumer -> consumer.transformWith(ofFixedSize(fileSize / 2)));
 					}

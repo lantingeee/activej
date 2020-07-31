@@ -86,7 +86,7 @@ public final class TestPartialRemoteFs {
 		ThreadLocalRandom.current().nextBytes(data);
 
 		ChannelSupplier<ByteBuf> supplier = ChannelSupplier.of(ByteBuf.wrapForReading(data));
-		ChannelConsumer<ByteBuf> consumer = ChannelConsumer.ofPromise(client.upload("test_big_file.bin", data.length));
+		ChannelConsumer<ByteBuf> consumer = ChannelConsumer.ofPromise(client.upload("test_big_file.bin"));
 
 		await(supplier.streamTo(consumer)
 				.whenComplete(server::close));
