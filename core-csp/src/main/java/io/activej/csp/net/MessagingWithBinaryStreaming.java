@@ -87,6 +87,10 @@ public final class MessagingWithBinaryStreaming<I, O> implements Messaging<I, O>
 		}
 	}
 
+	public AsyncTcpSocket getSocket() {
+		return socket;
+	}
+
 	@Override
 	public Promise<I> receive() {
 		return bufsSupplier.parse(codec::tryDecode)

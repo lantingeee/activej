@@ -17,7 +17,6 @@
 package io.activej.fs.tcp;
 
 import io.activej.csp.binary.ByteBufsCodec;
-import io.activej.csp.net.Messaging;
 import io.activej.csp.net.MessagingWithBinaryStreaming;
 import io.activej.eventloop.Eventloop;
 import io.activej.fs.ActiveFs;
@@ -30,10 +29,14 @@ import io.activej.net.socket.tcp.AsyncTcpSocket;
 import io.activej.promise.Promise;
 import io.activej.promise.jmx.PromiseStats;
 
+import java.io.FileDescriptor;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.nio.channels.SocketChannel;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import static io.activej.async.util.LogUtils.Level.TRACE;
@@ -54,6 +57,7 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 
 	private final Map<Class<?>, MessagingHandler<FsCommand>> handlers = new HashMap<>();
 	private final ActiveFs fs;
+	private final Executor flushExecutor;
 
 	// region JMX
 	private final PromiseStats handleRequestPromise = PromiseStats.create(Duration.ofMinutes(5));
@@ -71,14 +75,15 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 	private final PromiseStats deleteAllPromise = PromiseStats.create(Duration.ofMinutes(5));
 	// endregion
 
-	private ActiveFsServer(Eventloop eventloop, ActiveFs fs) {
+	private ActiveFsServer(Eventloop eventloop, ActiveFs fs, Executor flushExecutor) {
 		super(eventloop);
 		this.fs = fs;
+		this.flushExecutor = flushExecutor;
 		addHandlers();
 	}
 
-	public static ActiveFsServer create(Eventloop eventloop, ActiveFs fs) {
-		return new ActiveFsServer(eventloop, fs);
+	public static ActiveFsServer create(Eventloop eventloop, ActiveFs fs, Executor flushExecutor) {
+		return new ActiveFsServer(eventloop, fs, flushExecutor);
 	}
 
 	public ActiveFs getFs() {
@@ -114,8 +119,11 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 			return (size == null ? fs.upload(name) : fs.upload(name, size))
 					.map(uploader -> size == null ? uploader : uploader.transformWith(ofFixedSize(size)))
 					.then(uploader -> messaging.send(new UploadAck())
-							.then(() -> messaging.receiveBinaryStream().streamTo(uploader)))
-					.then(() -> messaging.send(new UploadFinished()))
+							.then(() -> messaging.receiveBinaryStream()
+									.withEndOfStream(eos -> eos
+											.then(() -> messaging.send(new UploadFinished()))
+											.then(() -> size == null ? flush(messaging) : Promise.complete()))
+									.streamTo(uploader)))
 					.then(messaging::sendEndOfStream)
 					.whenResult(messaging::close)
 					.whenComplete(uploadPromise.recordStats())
@@ -176,9 +184,23 @@ public final class ActiveFsServer extends AbstractServer<ActiveFsServer> {
 				.whenComplete(stats.recordStats());
 	}
 
+	private Promise<Void> flush(MessagingWithBinaryStreaming<FsCommand, FsResponse> messaging) {
+		return Promise.ofBlockingRunnable(flushExecutor, () -> {
+			try {
+				SocketChannel channel = messaging.getSocket().getSocketChannel();
+				Method method = channel.getClass().getMethod("getFD");
+				method.setAccessible(true);
+				((FileDescriptor) method.invoke(channel)).sync();
+			} catch (Exception e) {
+				logger.warn("Flush failed", e);
+				throw new FsException(ActiveFsServer.class, "Flush failed", e);
+			}
+		});
+	}
+
 	@FunctionalInterface
 	private interface MessagingHandler<T extends FsCommand> {
-		Promise<Void> onMessage(Messaging<FsCommand, FsResponse> messaging, T item);
+		Promise<Void> onMessage(MessagingWithBinaryStreaming<FsCommand, FsResponse> messaging, T item);
 	}
 
 	@SuppressWarnings("unchecked")

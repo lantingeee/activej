@@ -53,8 +53,8 @@ public abstract class ActiveFsServerLauncher extends Launcher {
 	}
 
 	@Provides
-	ActiveFsServer activeFsServer(Eventloop eventloop, ActiveFs activeFs, Config config) {
-		return ActiveFsServer.create(eventloop, activeFs)
+	ActiveFsServer activeFsServer(Eventloop eventloop, ActiveFs activeFs, Executor executor, Config config) {
+		return ActiveFsServer.create(eventloop, activeFs, executor)
 				.withInitializer(ofActiveFsServer(config.getChild("activefs")));
 	}
 

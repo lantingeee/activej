@@ -84,7 +84,7 @@ public final class ClusterRepartitionControllerTest {
 		partitions.put("regular", RemoteActiveFs.create(eventloop, regularPartitionAddress));
 		initTempDir(regularPath);
 		LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, regularPath);
-		ActiveFsServer regularServer = ActiveFsServer.create(eventloop, localFs).withListenAddress(regularPartitionAddress);
+		ActiveFsServer regularServer = ActiveFsServer.create(eventloop, localFs, executor).withListenAddress(regularPartitionAddress);
 		regularServer.listen();
 		servers.add(regularServer);
 
@@ -101,7 +101,8 @@ public final class ClusterRepartitionControllerTest {
 						return super.upload(name)
 								.map(consumer -> consumer.transformWith(ofFixedSize(fileSize / 2)));
 					}
-				})
+				},
+				executor)
 				.withListenAddress(failingPartitionAddress);
 		failingServer.listen();
 		servers.add(failingServer);

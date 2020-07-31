@@ -91,7 +91,7 @@ public final class ClusterRepartitionControllerStressTest {
 
 			initTempDir(serverStorages[i]);
 			LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, serverStorages[i]);
-			ActiveFsServer server = ActiveFsServer.create(eventloop, localFs).withListenAddress(address);
+			ActiveFsServer server = ActiveFsServer.create(eventloop, localFs, executor).withListenAddress(address);
 			server.listen();
 			servers.add(server);
 		}

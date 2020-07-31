@@ -483,6 +483,9 @@ public final class ConfigConverters {
 								SocketSettings::withImplReadBufferSize,
 								config.get(ofMemSize(), "implReadBufferSize",
 										defaultValue.hasReadBufferSize() ? defaultValue.getImplReadBufferSize() : null)))
+						.andThen(applyIfNotNull(SocketSettings::withLingerTimeout,
+								config.get(ofDuration(), "lingerTimeout",
+										defaultValue.hasLingerTimeout() ? defaultValue.getLingerTimeout() : null)))
 						.apply(SocketSettings.create());
 			}
 		};

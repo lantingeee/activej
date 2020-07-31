@@ -31,6 +31,7 @@ import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.concurrent.Executor;
 
 import static io.activej.common.api.Recyclable.tryRecycle;
@@ -432,5 +433,10 @@ public final class AsyncTcpSocketSsl implements AsyncTcpSocket {
 	@Override
 	public boolean isClosed() {
 		return net2engine == null;
+	}
+
+	@Override
+	public SocketChannel getSocketChannel() {
+		return upstream.getSocketChannel();
 	}
 }

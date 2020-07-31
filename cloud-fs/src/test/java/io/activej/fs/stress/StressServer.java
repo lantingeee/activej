@@ -31,7 +31,7 @@ public class StressServer {
 
 	public static final LocalActiveFs localFs = LocalActiveFs.create(eventloop, executor, STORAGE_PATH);
 
-	public static final ActiveFsServer server = ActiveFsServer.create(eventloop, localFs)
+	public static final ActiveFsServer server = ActiveFsServer.create(eventloop, localFs, executor)
 			.withListenPort(PORT);
 
 	public static void main(String[] args) throws IOException {
